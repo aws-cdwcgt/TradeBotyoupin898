@@ -54,6 +54,8 @@ namespace TradeBotyoupin898
                         steamAPI.AcceptConfirmation(conf);
                     }
                 }
+
+                Thread.Sleep(600000);
             }
         }
     }
