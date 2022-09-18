@@ -1,15 +1,7 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using static System.Net.WebRequestMethods;
 using static TradeBotyoupin898.ToDo;
 
 namespace TradeBotyoupin898
@@ -21,7 +13,7 @@ namespace TradeBotyoupin898
         private const string endpoint_url = "https://api.youpin898.com/api/";
 
         private const int time_out = 10000;
-        
+
         public YouPinAPI()
         {
             manifest = Manifest.GetManifest();
@@ -34,16 +26,16 @@ namespace TradeBotyoupin898
             {
                 string responseStr = HttpResponse($"{endpoint_url}user/Account/ToDoList");
                 ToDo todo = JsonConvert.DeserializeObject<ToDo>(responseStr);
-            
+
                 if (todo.Code != 0) throw new APIErrorException();
                 return todo.Data;
             }
-            catch(APIErrorException)
+            catch (APIErrorException)
             {
                 Console.WriteLine("悠悠API寄了");
                 return null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine("出现了未预料的错误");
                 Console.WriteLine(ex.ToString());
@@ -55,8 +47,8 @@ namespace TradeBotyoupin898
         {
             try
             {
-            string responseStr = HttpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={toDo.OrderNo}");
-            Order order = JsonConvert.DeserializeObject<Order>(responseStr);
+                string responseStr = HttpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={toDo.OrderNo}");
+                Order order = JsonConvert.DeserializeObject<Order>(responseStr);
 
                 if (order.Code != 0) throw new APIErrorException();
 

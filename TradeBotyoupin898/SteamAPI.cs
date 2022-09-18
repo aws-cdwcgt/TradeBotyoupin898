@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SteamAuth;
+using System;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using SteamAuth;
 
 namespace TradeBotyoupin898
 {
@@ -56,7 +53,7 @@ namespace TradeBotyoupin898
 
         private void RefreshSession()
         {
-            if (currentAccount.RefreshSession()) 
+            if (currentAccount.RefreshSession())
             {
                 manifest.SaveAccount(currentAccount);
             }
