@@ -34,6 +34,8 @@ namespace TradeBotyoupin898
         /// 
         /// </summary>
         public int OfferStatus { get; set; }
+
+        public int BusinessType { get; set; }
     }
 
     public class Order
