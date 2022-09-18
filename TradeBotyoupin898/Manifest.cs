@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace TradeBotyoupin898
 {
+    // https://github.com/Jessecar96/SteamDesktopAuthenticator
     public class Manifest
     {
         [JsonProperty("first_run")]
