@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -31,58 +32,64 @@ namespace TradeBotyoupin898
                     break;
                 }
 
-                foreach (var todo in todoList)
-                {
-                    var order = youpinAPI.GetOrder(todo);
-                    BusinessType businessType;
-
-                    businessType = (BusinessType)order.BusinessType;
-
-                    // 仅处理租赁业务
-                    if (businessType != BusinessType.Lease) break;
-
-                    LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
-
-                    bool needPhoneConfirm = true;
-                    bool canHandle = true;
-
-                    switch (leaseStatus)
-                    {
-                        case LeaseStatus.Paied:
-                            needPhoneConfirm = true;
-                            break;
-
-                        case LeaseStatus.Remand:
-                            // 归还订单不需要手机确认
-                            needPhoneConfirm = false;
-                            break;
-
-                        default:
-                            canHandle = false;
-                            break;
-                    }
-
-                    if (!canHandle) break;
-
-                    Console.WriteLine(todo.CommodityName);
-
-                    Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
-
-                    steamAPI.AcceptOffer(order);
-
-                    if (needPhoneConfirm)
-                    {
-                        var confs = steamAPI.GetConfirmation();
-                        foreach (var conf in confs)
-                        {
-                            if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
-                            steamAPI.AcceptConfirmation(conf);
-                        }
-                    }
-                }
+                toDoListHandle(todoList);
 
                 Thread.Sleep(600000);
             }
         }
+
+        private void toDoListHandle(List<ToDo.TodoDataItem> todoList)
+        {
+            foreach (var todo in todoList)
+            {
+                var order = youpinAPI.GetOrder(todo);
+                BusinessType businessType;
+
+                businessType = (BusinessType)order.BusinessType;
+
+                // 仅处理租赁业务
+                if (businessType != BusinessType.Lease) break;
+
+                LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
+
+                bool needPhoneConfirm = true;
+                bool canHandle = true;
+
+                switch (leaseStatus)
+                {
+                    case LeaseStatus.Paied:
+                        needPhoneConfirm = true;
+                        break;
+
+                    case LeaseStatus.Remand:
+                        // 归还订单不需要手机确认
+                        needPhoneConfirm = false;
+                        break;
+
+                    default:
+                        canHandle = false;
+                        break;
+                }
+
+                if (!canHandle) break;
+
+                Console.WriteLine(todo.CommodityName);
+
+                Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
+
+                steamAPI.AcceptOffer(order);
+
+                if (needPhoneConfirm)
+                {
+                    var confs = steamAPI.GetConfirmation();
+                    foreach (var conf in confs)
+                    {
+                        if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
+                        steamAPI.AcceptConfirmation(conf);
+                    }
+                }
+            }
+        }
+
     }
 }
