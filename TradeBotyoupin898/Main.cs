@@ -36,30 +36,12 @@ namespace TradeBotyoupin898
                     var order = youpinAPI.GetOrder(todo);
                     BusinessType businessType;
 
-                    try
-                    {
-                        businessType = (BusinessType)order.BusinessType;
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"不支持的业务类型 {order.BusinessType}");
-                        break;
-                    }
+                    businessType = (BusinessType)order.BusinessType;
 
                     // 仅处理租赁业务
                     if (businessType != BusinessType.Lease) break;
 
-                    LeaseStatus leaseStatus;
-
-                    try
-                    {
-                        leaseStatus = (LeaseStatus)order.Status;
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"不支持的租赁订单状态 {order.Status}");
-                        break;
-                    }
+                    LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
 
                     bool needPhoneConfirm = true;
                     bool canHandle = true;

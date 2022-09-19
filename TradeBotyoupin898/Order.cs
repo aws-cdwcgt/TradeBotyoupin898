@@ -23,7 +23,7 @@
         /// <summary>
         /// 
         /// </summary>
-        public int Status { get; set; }
+        public int LeaseStatus { get; set; }
         /// <summary>
         /// 
         /// </summary>
