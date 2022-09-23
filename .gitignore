@@ -137,3 +137,5 @@ _NCrunch*
 packages/*
 
 inspectcode/*
+
+inspectcodereport.xml
