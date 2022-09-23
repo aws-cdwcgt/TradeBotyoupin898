@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -32,7 +33,14 @@ namespace TradeBotyoupin898
                     break;
                 }
 
-                toDoListHandle(todoList);
+                try
+                {
+                    toDoListHandle(todoList);
+                }
+                catch (InvalidEnumArgumentException NotHandleException)
+                {
+                    Console.WriteLine(NotHandleException);
+                }
 
                 Thread.Sleep(600000);
             }
@@ -53,7 +61,6 @@ namespace TradeBotyoupin898
                 LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
 
                 bool needPhoneConfirm = true;
-                bool canHandle = true;
 
                 switch (leaseStatus)
                 {
@@ -67,11 +74,8 @@ namespace TradeBotyoupin898
                         break;
 
                     default:
-                        canHandle = false;
-                        break;
+                        throw new InvalidEnumArgumentException(nameof(leaseStatus), (int)leaseStatus, typeof(LeaseStatus));
                 }
-
-                if (!canHandle) break;
 
                 Console.WriteLine(todo.CommodityName);
 
