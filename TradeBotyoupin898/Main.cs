@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -36,7 +37,7 @@ namespace TradeBotyoupin898
                 {
                     toDoListHandle(todoList);
                 }
-                catch (System.ComponentModel.InvalidEnumArgumentException NotHandleException)
+                catch (InvalidEnumArgumentException NotHandleException)
                 {
                     Console.WriteLine(NotHandleException);
                 }
@@ -73,7 +74,7 @@ namespace TradeBotyoupin898
                         break;
 
                     default:
-                        throw new System.ComponentModel.InvalidEnumArgumentException(nameof(leaseStatus), (int)leaseStatus, typeof(LeaseStatus));
+                        throw new InvalidEnumArgumentException(nameof(leaseStatus), (int)leaseStatus, typeof(LeaseStatus));
                 }
 
                 Console.WriteLine(todo.CommodityName);
