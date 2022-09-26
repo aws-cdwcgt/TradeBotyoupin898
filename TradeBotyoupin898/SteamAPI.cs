@@ -32,12 +32,14 @@ namespace TradeBotyoupin898
 
         public void AcceptOffer(OrderData order)
         {
-            var postData = new NameValueCollection();
-            postData.Add("partner", order.OtherSteamId.ToString());
-            postData.Add("serverid", "1");
-            postData.Add("sessionid", currentAccount.Session.SessionID);
-            postData.Add("tradeofferid", order.SteamOfferId);
-            postData.Add("captcha", string.Empty);
+            var postData = new NameValueCollection
+            {
+                { "partner", order.OtherSteamId.ToString() },
+                { "serverid", "1" },
+                { "sessionid", currentAccount.Session.SessionID },
+                { "tradeofferid", order.SteamOfferId },
+                { "captcha", string.Empty }
+            };
 
             RefreshSession();
             CookieContainer cookies = new CookieContainer();

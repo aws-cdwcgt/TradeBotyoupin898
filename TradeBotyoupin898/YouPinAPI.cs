@@ -24,10 +24,10 @@ namespace TradeBotyoupin898
         {
             try
             {
-                string responseStr = HttpResponse($"{endpoint_url}user/Account/ToDoList");
+                string responseStr = httpResponse($"{endpoint_url}user/Account/ToDoList");
                 ToDo todo = JsonConvert.DeserializeObject<ToDo>(responseStr);
 
-                if (todo.Code != 0) throw new APIErrorException();
+                if (todo.Code != 0 || todo == null) throw new APIErrorException();
                 return todo.Data;
             }
             catch (APIErrorException)
@@ -47,10 +47,10 @@ namespace TradeBotyoupin898
         {
             try
             {
-                string responseStr = HttpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={toDo.OrderNo}");
+                string responseStr = httpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={toDo.OrderNo}");
                 Order order = JsonConvert.DeserializeObject<Order>(responseStr);
 
-                if (order.Code != 0) throw new APIErrorException();
+                if (order.Code != 0 || order == null) throw new APIErrorException();
 
                 return order.Data;
             }
@@ -68,7 +68,7 @@ namespace TradeBotyoupin898
         }
 
 
-        private string HttpResponse(string url)
+        private string httpResponse(string url)
         {
             RestClientOptions clientOptions = new RestClientOptions(url)
             {
@@ -82,7 +82,7 @@ namespace TradeBotyoupin898
             return response.Content;
         }
 
-        class APIErrorException : Exception
+        private class APIErrorException : Exception
         {
         }
     }

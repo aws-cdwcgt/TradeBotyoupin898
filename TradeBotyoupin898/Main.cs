@@ -124,7 +124,7 @@ namespace TradeBotyoupin898
                 foreach (var conf in confs)
                 {
                     if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
-                    steamAPI.AcceptConfirmation(conf);
+                    while (steamAPI.AcceptConfirmation(conf));
                 }
             }
         }
