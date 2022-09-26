@@ -55,45 +55,78 @@ namespace TradeBotyoupin898
 
                 businessType = (BusinessType)order.BusinessType;
 
-                // 仅处理租赁业务
-                if (businessType != BusinessType.Lease) break;
-
-                LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
-
-                bool needPhoneConfirm = true;
-
-                switch (leaseStatus)
+                switch (businessType)
                 {
-                    case LeaseStatus.Paied:
-                        needPhoneConfirm = true;
+                    case BusinessType.Lease:
+                        LeadeHandle(order);
                         break;
 
-                    case LeaseStatus.Remand:
-                        // 归还订单不需要手机确认
-                        needPhoneConfirm = false;
+                    case BusinessType.Sell:
+                        SellHandle(order);
                         break;
 
                     default:
-                        throw new InvalidEnumArgumentException(nameof(leaseStatus), (int)leaseStatus, typeof(LeaseStatus));
+                        throw new InvalidEnumArgumentException("尚未支持的业务类型", order.BusinessType, typeof(BusinessType));
                 }
+                if (businessType != BusinessType.Lease) break;
 
-                Console.WriteLine(todo.CommodityName);
-
-                Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
-
-                steamAPI.AcceptOffer(order);
-
-                if (needPhoneConfirm)
-                {
-                    var confs = steamAPI.GetConfirmation();
-                    foreach (var conf in confs)
-                    {
-                        if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
-                        steamAPI.AcceptConfirmation(conf);
-                    }
-                }
+                LeadeHandle(order);
             }
         }
 
+        private void LeadeHandle(OrderData order)
+        {
+            LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
+
+            bool needPhoneConfirm;
+
+            switch (leaseStatus)
+            {
+                case LeaseStatus.Paied:
+                    needPhoneConfirm = true;
+                    break;
+
+                case LeaseStatus.Remand:
+                    // 归还订单不需要手机确认
+                    needPhoneConfirm = false;
+                    break;
+
+                default:
+                    throw new InvalidEnumArgumentException("尚未支持的租赁订单状态", order.LeaseStatus, typeof(LeaseStatus));
+            }
+
+            Console.WriteLine(order.CommodityName);
+            Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
+
+            SteamConfrim(order, needPhoneConfirm);
+        }
+
+
+        /// <summary>
+        /// 出售订单没有多余的状态
+        /// </summary>
+        /// <param name="order"></param>
+        private void SellHandle(OrderData order)
+        {
+            Console.WriteLine(order.CommodityName);
+            Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
+
+            SteamConfrim(order);
+        }
+
+        private void SteamConfrim(OrderData order, bool needPhoneConfirm = true)
+        {
+            steamAPI.AcceptOffer(order);
+
+            if (needPhoneConfirm)
+            {
+                var confs = steamAPI.GetConfirmation();
+                foreach (var conf in confs)
+                {
+                    if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
+                    steamAPI.AcceptConfirmation(conf);
+                }
+            }
+        }
     }
 }
