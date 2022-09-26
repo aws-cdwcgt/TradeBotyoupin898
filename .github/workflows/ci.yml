@@ -10,11 +10,10 @@ jobs:
     name: Code Quality
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository and submodules
         uses: actions/checkout@v2
-
-      - name: Checkout submodules
-        uses: textbook/git-checkout-submodule-action@master
+        with:
+          submodules: recursive
 
       # FIXME: Tools won't run in .NET 6.0 unless you install 3.1.x LTS side by side.
       # https://itnext.io/how-to-support-multiple-net-sdks-in-github-actions-workflows-b988daa884e
