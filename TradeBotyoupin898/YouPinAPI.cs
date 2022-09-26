@@ -27,7 +27,7 @@ namespace TradeBotyoupin898
                 string responseStr = HttpResponse($"{endpoint_url}user/Account/ToDoList");
                 ToDo todo = JsonConvert.DeserializeObject<ToDo>(responseStr);
 
-                if (todo.Code != 0) throw new APIErrorException();
+                if (todo.Code != 0 || todo == null) throw new APIErrorException();
                 return todo.Data;
             }
             catch (APIErrorException)
@@ -50,7 +50,7 @@ namespace TradeBotyoupin898
                 string responseStr = HttpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={toDo.OrderNo}");
                 Order order = JsonConvert.DeserializeObject<Order>(responseStr);
 
-                if (order.Code != 0) throw new APIErrorException();
+                if (order.Code != 0 || order == null) throw new APIErrorException();
 
                 return order.Data;
             }
