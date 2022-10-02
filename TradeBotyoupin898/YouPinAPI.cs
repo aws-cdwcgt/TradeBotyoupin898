@@ -72,7 +72,7 @@ namespace TradeBotyoupin898
         {
             try
             {
-                string responseStr = httpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={OrderNo}");
+                string responseStr = httpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={orderNo}");
                 Order order = JsonConvert.DeserializeObject<Order>(responseStr);
 
                 if (order.Code != 0 || order == null) throw new APIErrorException();
