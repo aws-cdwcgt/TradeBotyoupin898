@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json;
-using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
+using Newtonsoft.Json;
+using RestSharp;
 using static TradeBotyoupin898.ToDo;
 
 namespace TradeBotyoupin898
@@ -43,11 +44,35 @@ namespace TradeBotyoupin898
             }
         }
 
-        public OrderData GetOrder(TodoDataItem toDo)
+        public OrderData GetLeaseReturnOrder(long orderNo)
         {
             try
             {
-                string responseStr = httpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={toDo.OrderNo}");
+                string responseStr = httpResponse($"{endpoint_url}v2/commodity/Lease/GetDetail?OrderNo={orderNo}");
+                JsonObject order = JsonConvert.DeserializeObject<JsonObject>(responseStr);
+
+                if ((int)order["code"] != 0 || order == null) throw new APIErrorException();
+
+                return GetOrder((long)order["Data"]["ReturnOrderNo"]);
+            }
+            catch (APIErrorException)
+            {
+                Console.WriteLine("悠悠API寄了");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("出现了未预料的错误");
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+
+        public OrderData GetOrder(long orderNo)
+        {
+            try
+            {
+                string responseStr = httpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={OrderNo}");
                 Order order = JsonConvert.DeserializeObject<Order>(responseStr);
 
                 if (order.Code != 0 || order == null) throw new APIErrorException();
