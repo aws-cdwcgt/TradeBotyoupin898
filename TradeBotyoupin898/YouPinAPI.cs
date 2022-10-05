@@ -44,7 +44,7 @@ namespace TradeBotyoupin898
             }
         }
 
-        public OrderData GetLeaseReturnOrder(long orderNo)
+        public OrderData GetLeaseReturnOrder(string orderNo)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace TradeBotyoupin898
 
                 if ((int)order["code"] != 0 || order == null) throw new APIErrorException();
 
-                return GetOrder((long)order["Data"]["ReturnOrderNo"]);
+                return GetOrder(order["Data"]["ReturnOrderNo"]);
             }
             catch (APIErrorException)
             {
@@ -68,7 +68,7 @@ namespace TradeBotyoupin898
             }
         }
 
-        public OrderData GetOrder(long orderNo)
+        public OrderData GetOrder(string orderNo)
         {
             try
             {

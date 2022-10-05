@@ -50,7 +50,7 @@ namespace TradeBotyoupin898
         {
             foreach (var todo in todoList)
             {
-                long orderID = long.Parse(todo.OrderNo);
+                string orderID = todo.OrderNo;
                 var order = youpinAPI.GetOrder(orderID);
                 BusinessType businessType;
 
@@ -86,7 +86,7 @@ namespace TradeBotyoupin898
 
                 case LeaseStatus.Remand:
                     // 获取归还订单单号，代办所给单号为租赁用
-                    order = youpinAPI.GetLeaseReturnOrder(long.Parse(order.OrderNo));
+                    order = youpinAPI.GetLeaseReturnOrder(order.OrderNo);
                     // 归还订单不需要手机确认
                     needPhoneConfirm = false;
                     break;
