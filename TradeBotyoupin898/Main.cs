@@ -50,7 +50,8 @@ namespace TradeBotyoupin898
         {
             foreach (var todo in todoList)
             {
-                var order = youpinAPI.GetOrder(todo);
+                string orderID = todo.OrderNo;
+                var order = youpinAPI.GetOrder(orderID);
                 BusinessType businessType;
 
                 businessType = (BusinessType)order.BusinessType;
@@ -58,23 +59,20 @@ namespace TradeBotyoupin898
                 switch (businessType)
                 {
                     case BusinessType.Lease:
-                        LeadeHandle(order);
+                        leadeHandle(order);
                         break;
 
                     case BusinessType.Sell:
-                        SellHandle(order);
+                        sellHandle(order);
                         break;
 
                     default:
                         throw new InvalidEnumArgumentException("尚未支持的业务类型", order.BusinessType, typeof(BusinessType));
                 }
-                if (businessType != BusinessType.Lease) break;
-
-                LeadeHandle(order);
             }
         }
 
-        private void LeadeHandle(OrderData order)
+        private void leadeHandle(OrderData order)
         {
             LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
 
@@ -87,6 +85,8 @@ namespace TradeBotyoupin898
                     break;
 
                 case LeaseStatus.Remand:
+                    // 获取归还订单单号，代办所给单号为租赁用
+                    order = youpinAPI.GetLeaseReturnOrder(order.OrderNo);
                     // 归还订单不需要手机确认
                     needPhoneConfirm = false;
                     break;
@@ -98,7 +98,7 @@ namespace TradeBotyoupin898
             Console.WriteLine(order.CommodityName);
             Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
 
-            SteamConfrim(order, needPhoneConfirm);
+            steamConfrim(order, needPhoneConfirm);
         }
 
 
@@ -106,15 +106,15 @@ namespace TradeBotyoupin898
         /// 出售订单没有多余的状态
         /// </summary>
         /// <param name="order"></param>
-        private void SellHandle(OrderData order)
+        private void sellHandle(OrderData order)
         {
             Console.WriteLine(order.CommodityName);
             Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
 
-            SteamConfrim(order);
+            steamConfrim(order);
         }
 
-        private void SteamConfrim(OrderData order, bool needPhoneConfirm = true)
+        private void steamConfrim(OrderData order, bool needPhoneConfirm = true)
         {
             steamAPI.AcceptOffer(order);
 
@@ -124,7 +124,7 @@ namespace TradeBotyoupin898
                 foreach (var conf in confs)
                 {
                     if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
-                    while (steamAPI.AcceptConfirmation(conf));
+                    while (steamAPI.AcceptConfirmation(conf)) ;
                 }
             }
         }
