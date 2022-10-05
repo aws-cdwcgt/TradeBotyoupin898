@@ -49,11 +49,11 @@ namespace TradeBotyoupin898
             try
             {
                 string responseStr = httpResponse($"{endpoint_url}v2/commodity/Lease/GetDetail?OrderNo={orderNo}");
-                JsonObject order = JsonConvert.DeserializeObject<JsonObject>(responseStr);
+                LeaseOrder order = JsonConvert.DeserializeObject<LeaseOrder>(responseStr);
 
-                if ((int)order["code"] != 0 || order == null) throw new APIErrorException();
+                if (order.Code != 0 || order == null) throw new APIErrorException();
 
-                return GetOrder(order["Data"]["ReturnOrderNo"]);
+                return GetOrder(order.Data.ReturnOrderNo);
             }
             catch (APIErrorException)
             {
