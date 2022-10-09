@@ -2,7 +2,7 @@
 {
     public class OrderData
     {
-        public ulong OtherSteamId { get; set; }
+        public ulong? OtherSteamId { get; set; }
         /// <summary>
         /// 
         /// </summary>
