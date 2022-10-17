@@ -59,7 +59,7 @@ namespace TradeBotyoupin898
                 switch (businessType)
                 {
                     case BusinessType.Lease:
-                        leadeHandle(order);
+                        leaseHandle(order);
                         break;
 
                     case BusinessType.Sell:
@@ -72,7 +72,7 @@ namespace TradeBotyoupin898
             }
         }
 
-        private void leadeHandle(OrderData order)
+        private void leaseHandle(OrderData order)
         {
             LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
 
