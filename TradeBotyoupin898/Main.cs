@@ -30,7 +30,7 @@ namespace TradeBotyoupin898
                     Console.WriteLine("当前没有报价");
                     Console.WriteLine();
                     Thread.Sleep(600000);
-                    break;
+                    continue;
                 }
 
                 try
