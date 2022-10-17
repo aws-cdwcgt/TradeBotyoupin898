@@ -91,6 +91,10 @@ namespace TradeBotyoupin898
                     needPhoneConfirm = false;
                     break;
 
+                case LeaseStatus.Intervention:
+                    Console.WriteLine($"{order.CommodityName} 正处于客服介入状态，可能需要手动在 Steam 中确认报价（暂不支持未与悠悠有品配对的报价）。");
+                    return;
+
                 default:
                     throw new InvalidEnumArgumentException("尚未支持的租赁订单状态", order.LeaseStatus, typeof(LeaseStatus));
             }
