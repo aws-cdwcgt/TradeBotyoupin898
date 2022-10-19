@@ -21,7 +21,7 @@ namespace TradeBotyoupin898
 
         public Confirmation[] GetConfirmation()
         {
-            RefreshSession();
+            refreshSession();
             return currentAccount.FetchConfirmations();
         }
 
@@ -34,14 +34,14 @@ namespace TradeBotyoupin898
         {
             var postData = new NameValueCollection
             {
-                { "partner", order.OtherSteamId.ToString() },
+                { "partner", order.Buyer.SteamId.ToString() },
                 { "serverid", "1" },
                 { "sessionid", currentAccount.Session.SessionID },
-                { "tradeofferid", order.SteamOfferId },
+                { "tradeofferid", order.TradeOfferId.ToString() },
                 { "captcha", string.Empty }
             };
 
-            RefreshSession();
+            refreshSession();
             CookieContainer cookies = new CookieContainer();
             cookies.Add(new Cookie("sessionid", currentAccount.Session.SessionID, "/", ".steamcommunity.com"));
             cookies.Add(new Cookie("steamLoginSecure", currentAccount.Session.SteamLoginSecure, "/", ".steamcommunity.com")
@@ -50,10 +50,10 @@ namespace TradeBotyoupin898
                 Secure = true
             });
 
-            SteamWeb.Request($"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.SteamOfferId}/accept", "POST", data: postData, cookies: cookies, referer: $"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.SteamOfferId}");
+            SteamWeb.Request($"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.TradeOfferId}/accept", "POST", data: postData, cookies: cookies, referer: $"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.TradeOfferId}");
         }
 
-        private void RefreshSession()
+        private void refreshSession()
         {
             if (currentAccount.RefreshSession())
             {

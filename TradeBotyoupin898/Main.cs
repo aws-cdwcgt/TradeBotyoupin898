@@ -51,11 +51,12 @@ namespace TradeBotyoupin898
             foreach (var todo in todoList)
             {
                 string orderID = todo.OrderNo;
-                var order = youpinAPI.GetOrder(orderID);
+                OrderData order = youpinAPI.GetOrder(orderID);
                 BusinessType businessType;
 
-                businessType = (BusinessType)order.BusinessType;
+                businessType = (BusinessType)order.TradeType.Type;
 
+                /**
                 switch (businessType)
                 {
                     case BusinessType.Lease:
@@ -69,12 +70,16 @@ namespace TradeBotyoupin898
                     default:
                         throw new InvalidEnumArgumentException("尚未支持的业务类型", order.BusinessType, typeof(BusinessType));
                 }
+                **/
+                // 由于对于其他订单状态暂时未知，默认由sellHandle处理
+                sellHandle(order);
             }
         }
 
+        /**
         private void leaseHandle(OrderData order)
         {
-            LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
+            //LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
 
             bool needPhoneConfirm;
 
@@ -95,11 +100,9 @@ namespace TradeBotyoupin898
                     throw new InvalidEnumArgumentException("尚未支持的租赁订单状态", order.LeaseStatus, typeof(LeaseStatus));
             }
 
-            Console.WriteLine(order.CommodityName);
-            Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
-
             steamConfrim(order, needPhoneConfirm);
         }
+        **/
 
 
         /// <summary>
@@ -108,9 +111,6 @@ namespace TradeBotyoupin898
         /// <param name="order"></param>
         private void sellHandle(OrderData order)
         {
-            Console.WriteLine(order.CommodityName);
-            Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
-
             steamConfrim(order);
         }
 
@@ -123,7 +123,7 @@ namespace TradeBotyoupin898
                 var confs = steamAPI.GetConfirmation();
                 foreach (var conf in confs)
                 {
-                    if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
+                    if (conf.Creator != order.TradeOfferId) break;
                     while (steamAPI.AcceptConfirmation(conf)) ;
                 }
             }

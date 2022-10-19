@@ -9,10 +9,6 @@ namespace TradeBotyoupin898
         /// </summary>
         public int Code { get; set; }
         /// <summary>
-        /// 请求成功
-        /// </summary>
-        public string Msg { get; set; }
-        /// <summary>
         /// 
         /// </summary>
         public List<TodoDataItem> Data { get; set; }

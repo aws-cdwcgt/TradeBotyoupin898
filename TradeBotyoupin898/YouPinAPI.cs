@@ -25,7 +25,7 @@ namespace TradeBotyoupin898
         {
             try
             {
-                string responseStr = httpResponse($"{endpoint_url}user/Account/ToDoList");
+                string responseStr = httpResponse($"{endpoint_url}youpin/bff/trade/todo/v1/orderTodo/list");
                 ToDo todo = JsonConvert.DeserializeObject<ToDo>(responseStr);
 
                 if (todo.Code != 0 || todo == null) throw new APIErrorException();
@@ -72,7 +72,7 @@ namespace TradeBotyoupin898
         {
             try
             {
-                string responseStr = httpResponse($"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={orderNo}");
+                string responseStr = httpResponse($"{endpoint_url}youpin/bff/trade/v1/order/query/detail", $"{{\"orderNo\": {orderNo}}}");
                 Order order = JsonConvert.DeserializeObject<Order>(responseStr);
 
                 if (order.Code != 0 || order == null) throw new APIErrorException();
@@ -93,16 +93,23 @@ namespace TradeBotyoupin898
         }
 
 
-        private string httpResponse(string url)
+        private string httpResponse(string url) => httpResponse(url, "{}");
+
+        private string httpResponse(string url, string content)
         {
             RestClientOptions clientOptions = new RestClientOptions(url)
             {
                 MaxTimeout = time_out
             };
             var client = new RestClient(clientOptions);
-            var request = new RestRequest();
+            var request = new RestRequest
+            {
+                Method = Method.Post
+            };
             request.AddHeader("Authorization", $"Bearer {authkey}");
             request.AddHeader("apptype", "3");
+            request.AddHeader("Content-Type", "application/json");
+            request.AddBody(content);
             RestResponse response = client.Execute(request);
             return response.Content;
         }

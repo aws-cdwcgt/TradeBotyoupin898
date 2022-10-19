@@ -6,7 +6,7 @@
     /// </summary>
     public enum BusinessType
     {
-        Sell = 3,
+        Sell = 2,
         Lease = 20,
     }
 }
