@@ -1,4 +1,4 @@
-﻿namespace TradeBotyoupin898
+﻿namespace TradeBotyoupin898.APIData.Legacy
 {
     public class LeaseOrder
     {

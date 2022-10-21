@@ -1,4 +1,6 @@
-﻿namespace TradeBotyoupin898
+﻿using TradeBotyoupin898.APIData;
+
+namespace TradeBotyoupin898
 {
     /// <summary>
     /// 业务类型，分为租赁与出售

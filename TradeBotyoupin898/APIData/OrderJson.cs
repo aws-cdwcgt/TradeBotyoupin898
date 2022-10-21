@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace TradeBotyoupin898
+﻿namespace TradeBotyoupin898.APIData
 {
     public class Buyer
     {
@@ -25,7 +23,7 @@ namespace TradeBotyoupin898
         public Buyer Buyer { get; set; }
     }
 
-    public class Order
+    public class OrderJson
     {
         public int Code { get; set; }
 

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace TradeBotyoupin898
+namespace TradeBotyoupin898.APIData
 {
-    public class ToDo
+    public class ToDoJson
     {
         /// <summary>
         /// 

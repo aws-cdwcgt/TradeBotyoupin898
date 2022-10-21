@@ -1,8 +1,9 @@
-﻿using SteamAuth;
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
+using SteamAuth;
+using TradeBotyoupin898.APIData;
 
 namespace TradeBotyoupin898
 {

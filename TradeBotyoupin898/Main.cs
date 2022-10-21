@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Threading;
+using TradeBotyoupin898.APIData;
 
 namespace TradeBotyoupin898
 {
@@ -46,7 +47,7 @@ namespace TradeBotyoupin898
             }
         }
 
-        private void toDoListHandle(List<ToDo.TodoDataItem> todoList)
+        private void toDoListHandle(List<ToDoJson.TodoDataItem> todoList)
         {
             foreach (var todo in todoList)
             {

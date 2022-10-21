@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json.Nodes;
 using Newtonsoft.Json;
 using RestSharp;
-using static TradeBotyoupin898.ToDo;
+using TradeBotyoupin898.APIData;
+using TradeBotyoupin898.APIData.Legacy;
+using static TradeBotyoupin898.APIData.Legacy.LegacyToDo;
+using static TradeBotyoupin898.APIData.ToDoJson;
 
 namespace TradeBotyoupin898
 {
@@ -26,7 +28,30 @@ namespace TradeBotyoupin898
             try
             {
                 string responseStr = httpResponse($"{endpoint_url}youpin/bff/trade/todo/v1/orderTodo/list");
-                ToDo todo = JsonConvert.DeserializeObject<ToDo>(responseStr);
+                ToDoJson todo = JsonConvert.DeserializeObject<ToDoJson>(responseStr);
+
+                if (todo.Code != 0 || todo == null) throw new APIErrorException();
+                return todo.Data;
+            }
+            catch (APIErrorException)
+            {
+                Console.WriteLine("悠悠API寄了");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("出现了未预料的错误");
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
+
+        public List<LegacyToDoDataItem> GetLegecyToDoList()
+        {
+            try
+            {
+                string responseStr = httpResponse($"{endpoint_url}user/Account/ToDoList", string.Empty);
+                LegacyToDo todo = JsonConvert.DeserializeObject<LegacyToDo>(responseStr);
 
                 if (todo.Code != 0 || todo == null) throw new APIErrorException();
                 return todo.Data;
@@ -73,7 +98,7 @@ namespace TradeBotyoupin898
             try
             {
                 string responseStr = httpResponse($"{endpoint_url}youpin/bff/trade/v1/order/query/detail", $"{{\"orderNo\": {orderNo}}}");
-                Order order = JsonConvert.DeserializeObject<Order>(responseStr);
+                OrderJson order = JsonConvert.DeserializeObject<OrderJson>(responseStr);
 
                 if (order.Code != 0 || order == null) throw new APIErrorException();
 
@@ -92,6 +117,29 @@ namespace TradeBotyoupin898
             }
         }
 
+        public LegacyOrderData GetLegacyOrder(string orderNo)
+        {
+            try
+            {
+                string responseStr = httpResponse($"{endpoint_url}youpin/bff/trade/v1/order/query/detail", $"{{\"orderNo\": {orderNo}}}");
+                LegacyOrder order = JsonConvert.DeserializeObject<LegacyOrder>(responseStr);
+
+                if (order.Code != 0 || order == null) throw new APIErrorException();
+
+                return order.Data;
+            }
+            catch (APIErrorException)
+            {
+                Console.WriteLine("悠悠API寄了");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("出现了未预料的错误");
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
+        }
 
         private string httpResponse(string url) => httpResponse(url, "{}");
 
