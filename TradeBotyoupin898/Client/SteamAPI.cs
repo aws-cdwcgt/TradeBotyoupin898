@@ -3,9 +3,8 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using SteamAuth;
-using TradeBotyoupin898.APIData;
 
-namespace TradeBotyoupin898
+namespace TradeBotyoupin898.Client
 {
     internal class SteamAPI
     {
@@ -43,7 +42,7 @@ namespace TradeBotyoupin898
             };
 
             refreshSession();
-            CookieContainer cookies = new CookieContainer();
+            var cookies = new CookieContainer();
             cookies.Add(new Cookie("sessionid", currentAccount.Session.SessionID, "/", ".steamcommunity.com"));
             cookies.Add(new Cookie("steamLoginSecure", currentAccount.Session.SteamLoginSecure, "/", ".steamcommunity.com")
             {
