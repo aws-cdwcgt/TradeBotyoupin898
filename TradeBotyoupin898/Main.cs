@@ -4,7 +4,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Threading;
-using TradeBotyoupin898.APIData;
+using TradeBotyoupin898.Client;
+using TradeBotyoupin898.DataStruct;
 
 namespace TradeBotyoupin898
 {
@@ -12,6 +13,9 @@ namespace TradeBotyoupin898
     {
         private YouPinAPI youpinAPI;
         private SteamAPI steamAPI;
+
+        private const int kapi_call_interval = 1000;
+        private const int kapi_update_interval = 60000;
 
         public Main()
         {
@@ -25,33 +29,50 @@ namespace TradeBotyoupin898
         {
             while (true)
             {
-                var todoList = youpinAPI.GetToDoList();
-                if (todoList == null || todoList.Count == 0)
-                {
-                    Console.WriteLine("当前没有报价");
-                    Console.WriteLine();
-                    Thread.Sleep(600000);
-                    continue;
-                }
+                ushort apiCallCount = 0;
 
                 try
                 {
-                    toDoListHandle(todoList);
-                }
-                catch (InvalidEnumArgumentException NotHandleException)
-                {
-                    Console.WriteLine(NotHandleException);
-                }
+                    youpinAPI.UpdateAllToDoItem();
 
-                Thread.Sleep(600000);
+                    if (youpinAPI.ToDoItem.Count == 0)
+                    {
+                        Console.WriteLine("当前没有报价");
+                        updateSleep(apiCallCount);
+                        continue;
+                    }
+
+                    try
+                    {
+                        ProcessAllToDoItem(youpinAPI.ToDoItem);
+                    }
+                    catch (InvalidEnumArgumentException NotHandleException)
+                    {
+                        Console.WriteLine(NotHandleException);
+                    }
+                }
+                catch (APIErrorException)
+                {
+                    Console.WriteLine("悠悠API寄了.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("出现了未预料的错误.");
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    Console.WriteLine(DateTime.UtcNow);
+                    updateSleep(apiCallCount);
+                }
             }
         }
 
-        private void toDoListHandle(List<ToDoJson.TodoDataItem> todoList)
+        private void ProcessAllToDoItem(List<IToDoDataItem> itemList)
         {
-            foreach (var todo in todoList)
+            foreach (var item in itemList)
             {
-                string orderID = todo.OrderNo;
+                string orderID = item.OrderNo;
                 OrderData order = youpinAPI.GetOrder(orderID);
                 BusinessType businessType;
 
@@ -127,6 +148,40 @@ namespace TradeBotyoupin898
                     if (conf.Creator != order.TradeOfferId) break;
                     while (steamAPI.AcceptConfirmation(conf)) ;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Increasing callCount by 1, and sleep api call invteval.
+        /// </summary>
+        private void callSleep(ref ushort callCount)
+        {
+            callCount++;
+            Thread.Sleep(kapi_call_interval);
+        }
+
+        private void callSleep()
+        {
+            Thread.Sleep(kapi_call_interval);
+        }
+
+        /// <summary>
+        /// slp 一个刷新间隔，减去已经 slp 的时间.
+        /// </summary>
+        /// <param name="callCount">这次更新中总共刷新的次数.</param>
+        private void updateSleep(ushort callCount)
+        {
+            int remainTime = kapi_update_interval - (callCount * kapi_call_interval);
+            if (remainTime <= kapi_call_interval)
+            {
+#if DEBUG
+                Console.WriteLine($"{DateTime.UtcNow}\t过多的API调用: {callCount}次!");
+#endif
+                callSleep();
+            }
+            else
+            {
+                Thread.Sleep(kapi_update_interval);
             }
         }
     }

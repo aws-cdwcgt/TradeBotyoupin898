@@ -1,4 +1,4 @@
-﻿using TradeBotyoupin898.APIData;
+﻿using TradeBotyoupin898.DataStruct;
 
 namespace TradeBotyoupin898
 {
