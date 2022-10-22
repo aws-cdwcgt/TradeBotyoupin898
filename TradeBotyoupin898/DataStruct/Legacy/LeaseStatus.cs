@@ -1,4 +1,4 @@
-﻿namespace TradeBotyoupin898.APIData.Legacy
+﻿namespace TradeBotyoupin898.DataStruct.Legacy
 {
     /// <summary>
     /// 出租时会遇到的所有状态
