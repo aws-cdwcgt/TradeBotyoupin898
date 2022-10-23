@@ -28,11 +28,11 @@ namespace TradeBotyoupin898.Client
             {
                 ToDoItem.Clear();
                 ToDoJson standard = getHttpResponse<ToDoJson>($"{endpoint_url}youpin/bff/trade/todo/v1/orderTodo/list", Method.Post);
-                ToDoItem.AddRange(standard.Data);
+                ToDoItem.AddRange(standard.GetData());
 
                 // FIXME:新版和旧版间获取到的 List 需要去重.
                 //LegacyToDo legacy = getHttpResponse<LegacyToDo>($"{endpoint_url}user/Account/ToDoList");
-                //ToDoItem.AddRange(legacy.Data);
+                //ToDoItem.AddRange(legacy.GetData);
             }   
             catch (APIErrorException)
             {
@@ -59,7 +59,7 @@ namespace TradeBotyoupin898.Client
                     return orderjson.Data;
                 case 26:
                     LegacyOrder legacyOrder = getHttpResponse<LegacyOrder>(
-                        $"{endpoint_url}youpin/bff/trade/v1/order/query/detail",
+                        $"{endpoint_url}trade/Order/OrderPagedDetail?OrderNo={toDoDataItem.OrderNo}",
                         Method.Get,
                         $"{{\"orderNo\": {toDoDataItem.OrderNo}}}");
                     return legacyOrder.Data;
@@ -76,6 +76,8 @@ namespace TradeBotyoupin898.Client
 
         private T getHttpResponse<T>(string url, Method method, string body = "{}") where T: ICode
         {
+            Console.WriteLine(typeof(T));
+
             string responseStr = request.HttpResponse(url, body, method);
             T result = JsonConvert.DeserializeObject<T>(responseStr);
             if (result.Code != 0 || result == null) throw new APIErrorException();

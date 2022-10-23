@@ -4,7 +4,7 @@ namespace TradeBotyoupin898.DataStruct
 {
     internal interface IToDo
     {
-        public List<IToDoDataItem> Data { get; }
+        public List<IToDoDataItem> GetData();
     }
 
     public interface IToDoDataItem
