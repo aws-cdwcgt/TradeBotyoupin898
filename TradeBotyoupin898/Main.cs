@@ -96,9 +96,6 @@ namespace TradeBotyoupin898
                 case OrderType.Sell:
                     steamAPI.AcceptOffer(order, true);
                     break;
-                case OrderType.Lease:
-
-                    break;
                 default:
                     throw new NotImplementedException($"未支持的 {order.GetOrderType()} 类型.");
             }
