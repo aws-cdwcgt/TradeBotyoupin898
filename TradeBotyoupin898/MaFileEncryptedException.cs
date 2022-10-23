@@ -3,7 +3,7 @@
 namespace TradeBotyoupin898
 {
     // https://github.com/Jessecar96/SteamDesktopAuthenticator
-    class MaFileEncryptedException : Exception
+    public class MaFileEncryptedException : Exception
     {
     }
 }

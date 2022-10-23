@@ -1,10 +1,11 @@
-﻿using SteamAuth;
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
+using SteamAuth;
+using TradeBotyoupin898.DataStruct;
 
-namespace TradeBotyoupin898
+namespace TradeBotyoupin898.Client
 {
     internal class SteamAPI
     {
@@ -21,7 +22,7 @@ namespace TradeBotyoupin898
 
         public Confirmation[] GetConfirmation()
         {
-            RefreshSession();
+            refreshSession();
             return currentAccount.FetchConfirmations();
         }
 
@@ -30,19 +31,19 @@ namespace TradeBotyoupin898
             return currentAccount.AcceptConfirmation(conf);
         }
 
-        public void AcceptOffer(OrderData order)
+        public void AcceptOffer(IOrderData order, bool require2FA)
         {
             var postData = new NameValueCollection
             {
-                { "partner", order.OtherSteamId.ToString() },
+                { "partner", order.GetBuyer().ToString() },
                 { "serverid", "1" },
                 { "sessionid", currentAccount.Session.SessionID },
-                { "tradeofferid", order.SteamOfferId },
+                { "tradeofferid", order.GetTradeOfferId() },
                 { "captcha", string.Empty }
             };
 
-            RefreshSession();
-            CookieContainer cookies = new CookieContainer();
+            refreshSession();
+            var cookies = new CookieContainer();
             cookies.Add(new Cookie("sessionid", currentAccount.Session.SessionID, "/", ".steamcommunity.com"));
             cookies.Add(new Cookie("steamLoginSecure", currentAccount.Session.SteamLoginSecure, "/", ".steamcommunity.com")
             {
@@ -50,10 +51,21 @@ namespace TradeBotyoupin898
                 Secure = true
             });
 
-            SteamWeb.Request($"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.SteamOfferId}/accept", "POST", data: postData, cookies: cookies, referer: $"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.SteamOfferId}");
+            SteamWeb.Request($"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.GetTradeOfferId()}/accept", "POST", data: postData, cookies: cookies, referer: $"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.GetTradeOfferId()}");
+
+            if (require2FA)
+            {
+                var confs = GetConfirmation();
+                foreach (var conf in confs)
+                {
+                    if (conf.Creator != ulong.Parse(order.GetTradeOfferId())) continue;
+                    if (!AcceptConfirmation(conf))
+                        throw new Exception("SteamAuth 向 Steam 发送 POST 时失败");
+                }
+            }
         }
 
-        private void RefreshSession()
+        private void refreshSession()
         {
             if (currentAccount.RefreshSession())
             {

@@ -1,8 +1,8 @@
-﻿namespace TradeBotyoupin898
+﻿namespace TradeBotyoupin898.DataStruct.Legacy
 {
     /// <summary>
     /// 出租时会遇到的所有状态
-    /// <see cref="OrderData.LeaseStatus"/> 提供状态
+    /// <see cref="LegacyOrderData.LeaseStatus"/> 提供状态
     /// </summary>
     public enum LeaseStatus
     {

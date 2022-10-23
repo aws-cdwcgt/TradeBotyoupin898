@@ -4,6 +4,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Threading;
+using TradeBotyoupin898.Client;
+using TradeBotyoupin898.DataStruct;
+using TradeBotyoupin898.DataStruct.Legacy;
 
 namespace TradeBotyoupin898
 {
@@ -11,6 +14,9 @@ namespace TradeBotyoupin898
     {
         private YouPinAPI youpinAPI;
         private SteamAPI steamAPI;
+
+        private const int kapi_call_interval = 1000;
+        private const int kapi_update_interval = 600000;
 
         public Main()
         {
@@ -24,108 +30,149 @@ namespace TradeBotyoupin898
         {
             while (true)
             {
-                var todoList = youpinAPI.GetToDoList();
-                if (todoList == null || todoList.Count == 0)
-                {
-                    Console.WriteLine("当前没有报价");
-                    Console.WriteLine();
-                    Thread.Sleep(600000);
-                    continue;
-                }
+                ushort apiCallCount = 0;
 
                 try
                 {
-                    toDoListHandle(todoList);
-                }
-                catch (InvalidEnumArgumentException NotHandleException)
-                {
-                    Console.WriteLine(NotHandleException);
-                }
+                    youpinAPI.UpdateAllToDoItem();
 
-                Thread.Sleep(600000);
+                    if (youpinAPI.ToDoItem.Count == 0)
+                    {
+                        Console.WriteLine("当前没有报价");
+                        continue;
+                    }
+
+                    try
+                    {
+                        processAllToDoItem(youpinAPI.ToDoItem);
+                    }
+                    catch (InvalidEnumArgumentException NotHandleException)
+                    {
+                        Console.WriteLine(NotHandleException);
+                    }
+                }
+                catch (APIErrorException)
+                {
+                    Console.WriteLine("悠悠API寄了.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("出现了未预料的错误.");
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    Console.WriteLine(DateTime.UtcNow);
+                    updateSleep(apiCallCount);
+                }
             }
         }
 
-        private void toDoListHandle(List<ToDo.TodoDataItem> todoList)
+        private void processAllToDoItem(List<IToDoDataItem> itemList)
         {
-            foreach (var todo in todoList)
+            foreach (var item in itemList)
             {
-                string orderID = todo.OrderNo;
-                var order = youpinAPI.GetOrder(orderID);
-                BusinessType businessType;
-
-                businessType = (BusinessType)order.BusinessType;
-
-                switch (businessType)
+                switch (youpinAPI.GetOrder(item))
                 {
-                    case BusinessType.Lease:
-                        leaseHandle(order);
+                    case OrderData orderData:
+                        dealOrderData(orderData);
                         break;
-
-                    case BusinessType.Sell:
-                        sellHandle(order);
+                    case LegacyOrderData legacyOrderData:
+                        dealOrderData(legacyOrderData);
                         break;
-
                     default:
-                        throw new InvalidEnumArgumentException("尚未支持的业务类型", order.BusinessType, typeof(BusinessType));
+                        throw new NotImplementedException($"未支持的 {nameof(IOrderData)} 类型.");
                 }
             }
         }
 
-        private void leaseHandle(OrderData order)
+        private void dealOrderData(OrderData order)
         {
-            LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
+            switch ((OrderType)order.GetOrderType())
+            {
+                case OrderType.Supply:
+                    steamAPI.AcceptOffer(order, false);
+                    break;
+                case OrderType.Sell:
+                    steamAPI.AcceptOffer(order, true);
+                    break;
+                default:
+                    throw new NotImplementedException($"未支持的 {order.GetOrderType()} 类型.");
+            }
+        }
 
-            bool needPhoneConfirm;
+        private void dealOrderData(LegacyOrderData order)
+        {
+            switch ((LegacyOrderType)order.GetOrderType())
+            {
+                case LegacyOrderType.Sell:
+                    steamAPI.AcceptOffer(order, true);
+                    break;
+                case LegacyOrderType.Lease:
+                    dealLease(order);
+                    break;
+                default:
+                    throw new NotImplementedException($"未支持的 {order.GetOrderType()} 类型.");
+            }
+        }
 
-            switch (leaseStatus)
+        private void dealSupply(IOrderData order)
+        {
+            steamAPI.AcceptOffer(order, false);
+        }
+
+        private void dealSell(IOrderData order)
+        {
+            steamAPI.AcceptOffer(order, true);
+        }
+
+        private void dealLease(LegacyOrderData order)
+        {
+            switch ((LeaseStatus)order.GetLeaseStatus())
             {
                 case LeaseStatus.Paied:
-                    needPhoneConfirm = true;
+                    steamAPI.AcceptOffer(order, true);
                     break;
-
                 case LeaseStatus.Remand:
-                    // 获取归还订单单号，代办所给单号为租赁用
-                    order = youpinAPI.GetLeaseReturnOrder(order.OrderNo);
-                    // 归还订单不需要手机确认
-                    needPhoneConfirm = false;
+                    LeaseOrderData remand = youpinAPI.GetLeaseReturnOrder(order);
+                    steamAPI.AcceptOffer(remand, false);
                     break;
-
                 default:
-                    throw new InvalidEnumArgumentException("尚未支持的租赁订单状态", order.LeaseStatus, typeof(LeaseStatus));
+                    throw new InvalidEnumArgumentException("尚未支持的租赁订单状态", order.GetLeaseStatus(), typeof(LeaseStatus));
             }
-
-            Console.WriteLine(order.CommodityName);
-            Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
-
-            steamConfrim(order, needPhoneConfirm);
         }
-
 
         /// <summary>
-        /// 出售订单没有多余的状态
+        /// Increasing callCount by 1, and sleep kapi_call_invteval milliseconds.
         /// </summary>
-        /// <param name="order"></param>
-        private void sellHandle(OrderData order)
+        private void callSleep(ref ushort callCount)
         {
-            Console.WriteLine(order.CommodityName);
-            Console.WriteLine(order.SteamOfferId, order.OtherSteamId);
-
-            steamConfrim(order);
+            callCount++;
+            Thread.Sleep(kapi_call_interval);
         }
 
-        private void steamConfrim(OrderData order, bool needPhoneConfirm = true)
+        private void callSleep()
         {
-            steamAPI.AcceptOffer(order);
+            Thread.Sleep(kapi_call_interval);
+        }
 
-            if (needPhoneConfirm)
+        /// <summary>
+        /// slp 一个刷新间隔，减去已经 slp 的时间.
+        /// </summary>
+        /// <param name="callCount">这次更新中总共刷新的次数.</param>
+        private void updateSleep(ushort callCount)
+        {
+            int remainTime = kapi_update_interval - (callCount * kapi_call_interval);
+            if (remainTime <= kapi_call_interval)
             {
-                var confs = steamAPI.GetConfirmation();
-                foreach (var conf in confs)
-                {
-                    if (conf.Creator != ulong.Parse(order.SteamOfferId)) break;
-                    while (steamAPI.AcceptConfirmation(conf)) ;
-                }
+#if DEBUG
+                Console.WriteLine($"{DateTime.UtcNow}\t过多的API调用: {callCount}次!");
+#endif
+                callSleep();
+            }
+            else
+            {
+                Thread.Sleep(kapi_update_interval);
             }
         }
     }
