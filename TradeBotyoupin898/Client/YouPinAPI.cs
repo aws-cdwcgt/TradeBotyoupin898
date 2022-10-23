@@ -10,7 +10,6 @@ namespace TradeBotyoupin898.Client
     internal class YouPinAPI
     {
         private Manifest manifest;
-        private string authkey;
         private HttpRequest request;
         private const string endpoint_url = "https://api.youpin898.com/api/";
 
@@ -28,17 +27,13 @@ namespace TradeBotyoupin898.Client
             try
             {
                 ToDoItem.Clear();
-                var standard = new ToDoJson(
-                    request.HttpResponse,
-                    $"{endpoint_url}youpin/bff/trade/todo/v1/orderTodo/list",
-                    string.Empty);
+                ToDoJson standard = getHttpResponse<ToDoJson>($"{endpoint_url}youpin/bff/trade/todo/v1/orderTodo/list", Method.Post);
                 ToDoItem.AddRange(standard.Data);
 
-                var legacy = new LegacyToDo(
-                    request.HttpResponse,
-                    $"{endpoint_url}user/Account/ToDoList");
-                ToDoItem.AddRange(legacy.Data);
-            }
+                // FIXME:新版和旧版间获取到的 List 需要去重.
+                //LegacyToDo legacy = getHttpResponse<LegacyToDo>($"{endpoint_url}user/Account/ToDoList");
+                //ToDoItem.AddRange(legacy.Data);
+            }   
             catch (APIErrorException)
             {
                 Console.WriteLine("悠悠API寄了");
@@ -53,48 +48,39 @@ namespace TradeBotyoupin898.Client
 
         public IOrderData GetOrder(IToDoDataItem toDoDataItem)
         {
-            switch (toDoDataItem)
+            // 以 IToDoDataItem.OrderNo 作为新旧 api 的识别方式.
+            switch (toDoDataItem.OrderNo.Length)
             {
-                case ToDoDataItem todoDataItem:
-                    OrderJson orderjson = new OrderJson(
-                        request.HttpResponse,
+                case 19:
+                    OrderJson orderjson = getHttpResponse<OrderJson>(
                         $"{endpoint_url}youpin/bff/trade/v1/order/query/detail",
-                        toDoDataItem.OrderNo);
+                        Method.Post,
+                        $"{{\"orderNo\": {toDoDataItem.OrderNo}}}");
                     return orderjson.Data;
-                case LegacyToDoDataItem legacyToDoDataItem:
-                    LegacyOrder legacyOrder = new LegacyOrder(
-                        request.HttpResponse,
+                case 26:
+                    LegacyOrder legacyOrder = getHttpResponse<LegacyOrder>(
                         $"{endpoint_url}youpin/bff/trade/v1/order/query/detail",
-                        legacyToDoDataItem.OrderNo);
+                        Method.Get,
+                        $"{{\"orderNo\": {toDoDataItem.OrderNo}}}");
                     return legacyOrder.Data;
                 default:
-                    throw new NotImplementedException("不支持的类型");
+                    throw new NotImplementedException($"仅可识别 {nameof(toDoDataItem.OrderNo)} 长度为 19 或 26 的订单.");
             }
-
         }
 
-        public OrderData GetLeaseReturnOrder(string orderNo)
+        public LeaseOrderData GetLeaseReturnOrder(LegacyOrderData order)
         {
-            try
-            {
-                string responseStr = HttpResponse($"{endpoint_url}v2/commodity/Lease/GetDetail?OrderNo={orderNo}");
-                var order = JsonConvert.DeserializeObject<LeaseOrder>(responseStr);
+            LeaseOrder legacyOrder = getHttpResponse<LeaseOrder>($"{endpoint_url}v2/commodity/Lease/GetDetail?OrderNo={order.OrderNo}", Method.Get);
+            return legacyOrder.Data;
+        }
 
-                if (order.Code != 0 || order == null) throw new APIErrorException();
+        private T getHttpResponse<T>(string url, Method method, string body = "{}") where T: ICode
+        {
+            string responseStr = request.HttpResponse(url, body, method);
+            T result = JsonConvert.DeserializeObject<T>(responseStr);
+            if (result.Code != 0 || result == null) throw new APIErrorException();
 
-                return GetOrder(order.Data.ReturnOrderNo);
-            }
-            catch (APIErrorException)
-            {
-                Console.WriteLine("悠悠API寄了");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("出现了未预料的错误");
-                Console.WriteLine(ex.ToString());
-                return null;
-            }
+            return result;
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using TradeBotyoupin898.Client;
 using TradeBotyoupin898.DataStruct;
+using TradeBotyoupin898.DataStruct.Legacy;
 
 namespace TradeBotyoupin898
 {
@@ -15,7 +16,7 @@ namespace TradeBotyoupin898
         private SteamAPI steamAPI;
 
         private const int kapi_call_interval = 1000;
-        private const int kapi_update_interval = 60000;
+        private const int kapi_update_interval = 600000;
 
         public Main()
         {
@@ -38,13 +39,12 @@ namespace TradeBotyoupin898
                     if (youpinAPI.ToDoItem.Count == 0)
                     {
                         Console.WriteLine("当前没有报价");
-                        updateSleep(apiCallCount);
                         continue;
                     }
 
                     try
                     {
-                        ProcessAllToDoItem(youpinAPI.ToDoItem);
+                        processAllToDoItem(youpinAPI.ToDoItem);
                     }
                     catch (InvalidEnumArgumentException NotHandleException)
                     {
@@ -68,91 +68,85 @@ namespace TradeBotyoupin898
             }
         }
 
-        private void ProcessAllToDoItem(List<IToDoDataItem> itemList)
+        private void processAllToDoItem(List<IToDoDataItem> itemList)
         {
             foreach (var item in itemList)
             {
-                string orderID = item.OrderNo;
-                OrderData order = youpinAPI.GetOrder(orderID);
-                BusinessType businessType;
-
-                businessType = (BusinessType)order.TradeType.Type;
-
-                /**
-                switch (businessType)
+                switch (youpinAPI.GetOrder(item))
                 {
-                    case BusinessType.Lease:
-                        leaseHandle(order);
+                    case OrderData orderData:
+                        dealOrderData(orderData);
                         break;
-
-                    case BusinessType.Sell:
-                        sellHandle(order);
+                    case LegacyOrderData legacyOrderData:
+                        dealOrderData(legacyOrderData);
                         break;
-
                     default:
-                        throw new InvalidEnumArgumentException("尚未支持的业务类型", order.BusinessType, typeof(BusinessType));
+                        throw new NotImplementedException($"未支持的 {nameof(IOrderData)} 类型.");
                 }
-                **/
-                // 由于对于其他订单状态暂时未知，默认由sellHandle处理
-                sellHandle(order);
             }
         }
 
-        /**
-        private void leaseHandle(OrderData order)
+        private void dealOrderData(OrderData order)
         {
-            //LeaseStatus leaseStatus = (LeaseStatus)order.LeaseStatus;
+            switch ((OrderType)order.GetOrderType())
+            {
+                case OrderType.Supply:
+                    steamAPI.AcceptOffer(order, false);
+                    break;
+                case OrderType.Sell:
+                    steamAPI.AcceptOffer(order, true);
+                    break;
+                case OrderType.Lease:
 
-            bool needPhoneConfirm;
+                    break;
+                default:
+                    throw new NotImplementedException($"未支持的 {order.GetOrderType()} 类型.");
+            }
+        }
 
-            switch (leaseStatus)
+        private void dealOrderData(LegacyOrderData order)
+        {
+            switch ((LegacyOrderType)order.GetOrderType())
+            {
+                case LegacyOrderType.Sell:
+                    steamAPI.AcceptOffer(order, true);
+                    break;
+                case LegacyOrderType.Lease:
+                    dealLease(order);
+                    break;
+                default:
+                    throw new NotImplementedException($"未支持的 {order.GetOrderType()} 类型.");
+            }
+        }
+
+        private void dealSupply(IOrderData order)
+        {
+            steamAPI.AcceptOffer(order, false);
+        }
+
+        private void dealSell(IOrderData order)
+        {
+            steamAPI.AcceptOffer(order, true);
+        }
+
+        private void dealLease(LegacyOrderData order)
+        {
+            switch ((LeaseStatus)order.GetLeaseStatus())
             {
                 case LeaseStatus.Paied:
-                    needPhoneConfirm = true;
+                    steamAPI.AcceptOffer(order, true);
                     break;
-
                 case LeaseStatus.Remand:
-                    // 获取归还订单单号，代办所给单号为租赁用
-                    order = youpinAPI.GetLeaseReturnOrder(order.OrderNo);
-                    // 归还订单不需要手机确认
-                    needPhoneConfirm = false;
+                    LeaseOrderData remand = youpinAPI.GetLeaseReturnOrder(order);
+                    steamAPI.AcceptOffer(remand, false);
                     break;
-
                 default:
-                    throw new InvalidEnumArgumentException("尚未支持的租赁订单状态", order.LeaseStatus, typeof(LeaseStatus));
-            }
-
-            steamConfrim(order, needPhoneConfirm);
-        }
-        **/
-
-
-        /// <summary>
-        /// 出售订单没有多余的状态
-        /// </summary>
-        /// <param name="order"></param>
-        private void sellHandle(OrderData order)
-        {
-            steamConfrim(order);
-        }
-
-        private void steamConfrim(OrderData order, bool needPhoneConfirm = true)
-        {
-            steamAPI.AcceptOffer(order);
-
-            if (needPhoneConfirm)
-            {
-                var confs = steamAPI.GetConfirmation();
-                foreach (var conf in confs)
-                {
-                    if (conf.Creator != order.TradeOfferId) break;
-                    while (steamAPI.AcceptConfirmation(conf)) ;
-                }
+                    throw new InvalidEnumArgumentException("尚未支持的租赁订单状态", order.GetLeaseStatus(), typeof(LeaseStatus));
             }
         }
 
         /// <summary>
-        /// Increasing callCount by 1, and sleep api call invteval.
+        /// Increasing callCount by 1, and sleep kapi_call_invteval milliseconds.
         /// </summary>
         private void callSleep(ref ushort callCount)
         {

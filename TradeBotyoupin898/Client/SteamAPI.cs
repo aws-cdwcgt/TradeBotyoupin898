@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using SteamAuth;
+using TradeBotyoupin898.DataStruct;
 
 namespace TradeBotyoupin898.Client
 {
@@ -30,14 +31,14 @@ namespace TradeBotyoupin898.Client
             return currentAccount.AcceptConfirmation(conf);
         }
 
-        public void AcceptOffer(OrderData order)
+        public void AcceptOffer(IOrderData order, bool require2FA)
         {
             var postData = new NameValueCollection
             {
-                { "partner", order.Buyer.SteamId.ToString() },
+                { "partner", order.GetBuyer().ToString() },
                 { "serverid", "1" },
                 { "sessionid", currentAccount.Session.SessionID },
-                { "tradeofferid", order.TradeOfferId.ToString() },
+                { "tradeofferid", order.GetTradeOfferId() },
                 { "captcha", string.Empty }
             };
 
@@ -50,7 +51,18 @@ namespace TradeBotyoupin898.Client
                 Secure = true
             });
 
-            SteamWeb.Request($"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.TradeOfferId}/accept", "POST", data: postData, cookies: cookies, referer: $"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.TradeOfferId}");
+            SteamWeb.Request($"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.GetTradeOfferId()}/accept", "POST", data: postData, cookies: cookies, referer: $"{APIEndpoints.COMMUNITY_BASE}/tradeoffer/{order.GetTradeOfferId()}");
+
+            if (require2FA)
+            {
+                var confs = GetConfirmation();
+                foreach (var conf in confs)
+                {
+                    if (conf.Creator != ulong.Parse(order.GetTradeOfferId())) continue;
+                    if (!AcceptConfirmation(conf))
+                        throw new Exception("SteamAuth 向 Steam 发送 POST 时失败");
+                }
+            }
         }
 
         private void refreshSession()

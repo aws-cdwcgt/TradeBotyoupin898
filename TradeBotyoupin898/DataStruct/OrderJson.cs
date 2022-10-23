@@ -4,33 +4,30 @@ using TradeBotyoupin898.Client;
 
 namespace TradeBotyoupin898.DataStruct
 {
-    public class OrderJson : IOrder
+    public class OrderJson : IOrder, ICode
     {
         public int Code { get; set; }
 
         public string Msg { get; set; }
 
         public OrderData Data { get; set; }
-
-        public OrderJson(Func<string, string, string> httpResponse, string url, string orderNo)
-        {
-            string responseStr = httpResponse(url, $"{{\"orderNo\": {orderNo}}}");
-            OrderJson result = JsonConvert.DeserializeObject<OrderJson>(responseStr);
-            if (result.Code != 0 || result == null) throw new APIErrorException();
-
-            Code = result.Code;
-            Msg = result.Msg;
-            Data = result.Data;
-        }
     }
 
-    public class OrderData : IOrderData
+    public class OrderData : IOrderData, IOrderType
     {
         public ulong TradeOfferId { get; set; }
 
         public TradeType TradeType { get; set; }
 
         public Buyer Buyer { get; set; }
+
+        public int GetOrderType() => TradeType.Type;
+
+        public int GetLeaseStatus() => throw new NotImplementedException("新 API 的租借订单尚未遇见，无法处理");
+
+        public ulong GetBuyer() => (ulong)Buyer.SteamId;
+
+        public string GetTradeOfferId() => TradeOfferId.ToString();
     }
 
     public class Buyer

@@ -23,4 +23,9 @@ namespace TradeBotyoupin898.DataStruct
 
         public string CommodityName { get; }
     }
+
+    public interface ICode
+    {
+        public int Code { get; }
+    }
 }

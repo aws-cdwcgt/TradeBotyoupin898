@@ -5,7 +5,7 @@ using TradeBotyoupin898.Client;
 
 namespace TradeBotyoupin898.DataStruct
 {
-    public class ToDoJson : IToDo
+    public class ToDoJson : IToDo, ICode
     {
         /// <summary>
         /// 
@@ -16,21 +16,6 @@ namespace TradeBotyoupin898.DataStruct
         /// </summary>
         // FIXME: (Error Prone)需要指明为更具体的 ToDoDataItem 而不是 IToDoDataItem.
         public List<IToDoDataItem> Data { get; set; }
-
-        /// <summary>
-        /// 向 httpResponse 发送 url.
-        /// </summary>
-        /// <param name="httpResponse"></param>
-        /// <param name="endpoint_url"></param>
-        public ToDoJson(Func<string, string, string> httpResponse, string url, string content)
-        {
-            string responseStr = httpResponse(url, content);
-            var result = JsonConvert.DeserializeObject<ToDoJson>(responseStr);
-            if (result.Code != 0 || result == null) throw new APIErrorException();
-
-            Code = result.Code;
-            Data = result.Data;
-        }
     }
 
     /// <summary>

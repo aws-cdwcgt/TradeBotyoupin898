@@ -1,4 +1,6 @@
-﻿using RestSharp;
+﻿using System;
+using System.Runtime.Serialization.Formatters;
+using RestSharp;
 
 namespace TradeBotyoupin898.Client
 {
@@ -15,7 +17,7 @@ namespace TradeBotyoupin898.Client
 
         internal string HttpResponse(string url) => HttpResponse(url, "{}");
 
-        internal string HttpResponse(string url, string content)
+        internal string HttpResponse(string url, string content, Method method = Method.Get)
         {
             var clientOptions = new RestClientOptions(url)
             {
@@ -24,7 +26,7 @@ namespace TradeBotyoupin898.Client
             var client = new RestClient(clientOptions);
             var request = new RestRequest
             {
-                Method = Method.Post
+                Method = method,
             };
             request.AddHeader("Authorization", $"Bearer {authkey}");
             request.AddHeader("apptype", "3");
